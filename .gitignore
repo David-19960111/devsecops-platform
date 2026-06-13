@@ -1,0 +1,28 @@
+# === SECRETOS - lo más importante ===
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# === Dependencias ===
+node_modules/
+__pycache__/
+*.pyc
+vendor/
+
+# === Builds ===
+dist/
+build/
+*.exe
+*.out
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === OS ===
+.DS_Store
+Thumbs.db
