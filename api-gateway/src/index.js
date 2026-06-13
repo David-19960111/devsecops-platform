@@ -43,6 +43,17 @@ app.get('/privado', verifyToken, (req, res) => {
   res.json({ mensaje: 'Acceso permitido', usuario: req.user });
 });
 
+// Rutas no encontradas
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+// Errores generales
+app.use((err, req, res, next) => {
+  logger.error(err.message);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
+
 app.listen(PORT, () => {
   logger.info(`API Gateway corriendo en puerto ${PORT}`);
 });
