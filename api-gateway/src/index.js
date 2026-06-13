@@ -5,6 +5,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
+const logger = require('./utils/logger')
+
 const { verifyToken } = require('./middleware/auth');
 
 const app = express()
@@ -12,7 +14,11 @@ const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
 app.use(cors());
-app.use(morgan('dev'));
+
+app.use(morgan('combined', {
+  stream: { write: message => logger.info(message.trim()) }
+}));
+
 app.use(express.json());
 
 const limiter = rateLimit({
@@ -38,5 +44,5 @@ app.get('/privado', verifyToken, (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`API Gateway corriendo en puerto ${PORT}`);
+  logger.info(`API Gateway corriendo en puerto ${PORT}`);
 });
