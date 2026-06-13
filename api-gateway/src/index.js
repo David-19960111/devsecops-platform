@@ -5,6 +5,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
+const { verifyToken } = require('./middleware/auth');
+
 const app = express()
 const PORT = process.env.PORT || 3000;
 
@@ -23,6 +25,16 @@ app.use(limiter);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'api-gateway' });
+});
+
+// Ruta pública - no requiere token
+app.get('/public', (req, res) => {
+  res.json({ mensaje: 'Esta ruta es pública' });
+});
+
+// Ruta protegida - requiere token
+app.get('/privado', verifyToken, (req, res) => {
+  res.json({ mensaje: 'Acceso permitido', usuario: req.user });
 });
 
 app.listen(PORT, () => {
