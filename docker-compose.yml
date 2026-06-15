@@ -24,3 +24,10 @@ services:
     environment:
       PORT: 8002
       ENV: development
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "8003:8003"
+    environment:
+      PORT: 8003
