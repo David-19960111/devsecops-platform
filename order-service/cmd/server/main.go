@@ -5,6 +5,7 @@ import (
     "os"
     "order-service/internal/handler"
     "github.com/gin-gonic/gin"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -17,6 +18,8 @@ func main() {
     r.GET("/health", func(c *gin.Context) {
         c.JSON(200, gin.H{"status": "ok", "service": "order-service"})
     })
+
+    r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
     orders := r.Group("/orders")
     {

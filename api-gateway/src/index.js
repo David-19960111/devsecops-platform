@@ -4,12 +4,17 @@ const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const promClient = require('prom-client');
 
 const logger = require('./utils/logger')
 
 const { verifyToken } = require('./middleware/auth');
 
 const app = express()
+
+const collectDefaultMetrics = promClient.collectDefaultMetrics;
+collectDefaultMetrics();
+
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
@@ -41,6 +46,11 @@ app.get('/public', (req, res) => {
 // Ruta protegida - requiere token
 app.get('/privado', verifyToken, (req, res) => {
   res.json({ mensaje: 'Acceso permitido', usuario: req.user });
+});
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', promClient.register.contentType);
+  res.send(await promClient.register.metrics());
 });
 
 // Rutas no encontradas

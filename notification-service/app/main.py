@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from prometheus_fastapi_instrumentator import Instrumentator
 import logging
 import os
 
@@ -24,3 +25,5 @@ def send_notification(notification: Notification):
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "notification-service"}
+
+Instrumentator().instrument(app).expose(app)
