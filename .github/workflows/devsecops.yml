@@ -29,9 +29,23 @@ jobs:
             pip install bandit
             bandit -r user-service/app notification-service/app -ll -f json -o bandit-report.json || true
     
-      - name: Upload Bnadit results
+      - name: Upload Bandit results
         uses: actions/upload-artifact@v4
         with:
             name: bandit-report
             path: bandit-report.json
+
+  test-gateway:
+    name: Test API Gateway
+    runs-on: ubuntu-latest
+    defaults:
+        run:
+            working-directory: api-gateway 
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm test
 

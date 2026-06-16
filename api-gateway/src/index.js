@@ -64,6 +64,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-app.listen(PORT, () => {
-  logger.info(`API Gateway corriendo en puerto ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(`API Gateway corriendo en puerto ${PORT}`);
+  });
+}
+
+module.exports = app;
