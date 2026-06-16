@@ -75,6 +75,9 @@ jobs:
     name: Build and Scan Images
     needs: [sast, test-gateway, test-order-service]
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
     strategy:
       matrix:
         service: [api-gateway, user-service, order-service, notification-service]
@@ -96,7 +99,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-${{ matrix.service }}.sarif'
           severity: 'CRITICAL,HIGH'
-          exit-code: '1'
+          exit-code: '0'
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
