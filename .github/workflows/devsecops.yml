@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
 jobs:
   secret-scan:
     name: Secret Scanning
@@ -23,7 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-       
+      - name: Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/javascript p/nodejs p/owasp-top-ten"
+
       - name: Bandit (Python)
         run: |
             pip install bandit
@@ -48,4 +56,80 @@ jobs:
           node-version: '20'
       - run: npm ci
       - run: npm test
+
+  test-order-service:
+    name: Test Order Service (Go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: order-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - run: go test ./... -v -coverprofile=coverage.out
+      - run: go vet ./...
+
+  build-and-scan:
+    name: Build and Scan Images
+    needs: [sast, test-gateway, test-order-service]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, user-service, order-service, notification-service]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          push: false
+          tags: ${{ matrix.service }}:${{ github.sha }}
+          outputs: type=docker
+        
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ matrix.service }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-${{ matrix.service }}.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-${{ matrix.service }}.sarif'
+
+  push-and-sign:
+    name: Push and Sign Images
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      matrix:
+        service: [api-gateway, user-service, order-service, notification-service]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ github.sha }}
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign image
+        run: cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}@${{ steps.build.outputs.digest }}
 
