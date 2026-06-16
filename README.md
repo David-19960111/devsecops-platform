@@ -16,6 +16,9 @@ Plataforma de microservicios con seguridad integrada, CI/CD y observabilidad.
 - Docker
 - Docker Compose
 - Git
+- Grafana
+- Prometheus 
+- Github Actions 
 
 ## Inicio rápido
 
