@@ -18,3 +18,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  sast:
+    name: SAST Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+       
+      - name: Bandit (Python)
+        run: |
+            pip install bandit
+            bandit -r user-service/app notification-service/app -ll -f json -o bandit-report.json || true
+    
+      - name: Upload Bnadit results
+        uses: actions/upload-artifact@v4
+        with:
+            name: bandit-report
+            path: bandit-report.json
+
