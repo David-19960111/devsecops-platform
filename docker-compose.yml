@@ -1,4 +1,20 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: users_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api-gateway:
     build: ./api-gateway
     ports:
@@ -16,6 +32,10 @@ services:
     environment:
       PORT: 8001
       JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgresql://admin:${POSTGRES_PASSWORD:-password}@postgres:5432/users_db
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   order-service:
     build: ./order-service
@@ -48,3 +68,6 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     depends_on:
       - prometheus
+
+volumes:
+  postgres_data:
