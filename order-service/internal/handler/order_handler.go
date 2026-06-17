@@ -14,7 +14,11 @@ func CreateOrder(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    order := service.CreateOrder(req)
+    order, err := service.CreateOrder(req)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al crear el pedido"})
+        return
+    }
     c.JSON(http.StatusCreated, order)
 }
 
@@ -38,6 +42,10 @@ func ListOrders(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": "user_id es requerido"})
         return
     }
-    orders := service.ListOrders(userID)
+    orders, err := service.ListOrders(userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al listar pedidos"})
+        return
+    }
     c.JSON(http.StatusOK, orders)
 }

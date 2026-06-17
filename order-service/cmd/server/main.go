@@ -3,12 +3,17 @@ package main
 import (
     "log"
     "os"
+    "order-service/internal/database"
     "order-service/internal/handler"
+    "order-service/internal/model"
     "github.com/gin-gonic/gin"
     "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
+    database.Connect()
+    database.DB.AutoMigrate(&model.Order{})
+
     if os.Getenv("ENV") == "production" {
         gin.SetMode(gin.ReleaseMode)
     }

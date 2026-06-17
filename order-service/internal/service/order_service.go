@@ -1,15 +1,12 @@
 package service
 
 import (
-    "errors"
+    "order-service/internal/database"
     "order-service/internal/model"
     "github.com/google/uuid"
 )
 
-// Base de datos en memoria por ahora
-var orders = map[uuid.UUID]model.Order{}
-
-func CreateOrder(req model.CreateOrderRequest) model.Order {
+func CreateOrder(req model.CreateOrderRequest) (model.Order, error) {
     order := model.Order{
         ID:       uuid.New(),
         UserID:   req.UserID,
@@ -17,24 +14,18 @@ func CreateOrder(req model.CreateOrderRequest) model.Order {
         Quantity: req.Quantity,
         Status:   model.StatusPending,
     }
-    orders[order.ID] = order
-    return order
+    result := database.DB.Create(&order)
+    return order, result.Error
 }
 
 func GetOrder(id uuid.UUID) (model.Order, error) {
-    order, exists := orders[id]
-    if !exists {
-        return model.Order{}, errors.New("order not found")
-    }
-    return order, nil
+    var order model.Order
+    result := database.DB.First(&order, "id = ?", id)
+    return order, result.Error
 }
 
-func ListOrders(userID string) []model.Order {
-    result := []model.Order{}
-    for _, order := range orders {
-        if order.UserID == userID {
-            result = append(result, order)
-        }
-    }
-    return result
+func ListOrders(userID string) ([]model.Order, error) {
+    var orders []model.Order
+    result := database.DB.Where("user_id = ?", userID).Find(&orders)
+    return orders, result.Error
 }
