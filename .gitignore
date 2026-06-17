@@ -35,3 +35,6 @@ venv/
 *.exe
 *.out
 /order-service/bin/
+
+# Kubernetes secrets
+k8s/base/secrets.yml

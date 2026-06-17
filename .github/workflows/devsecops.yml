@@ -127,7 +127,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set lowercase image name
-        run: echo "IMAGE_NAME=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')/${{ matrix.service }}:${{ github.sha }}" >> $GITHUB_ENV
+        run: echo "IMAGE_PREFIX=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')/${{ matrix.service }}:${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Build and push
         id: build
@@ -135,9 +135,9 @@ jobs:
         with:
           context: ./${{ matrix.service }}
           push: true
-          tags: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_PREFIX }}
 
       - uses: sigstore/cosign-installer@v3
 
       - name: Sign image
-        run: cosign sign --yes ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+        run: cosign sign --yes ${{ env.IMAGE_PREFIX }}@${{ steps.build.outputs.digest }}
