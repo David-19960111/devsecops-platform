@@ -18,7 +18,12 @@ collectDefaultMetrics();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
-app.use(cors());
+
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Authorization', 'Content-Type'],
+}));
 
 app.use(morgan('combined', {
   stream: { write: message => logger.info(message.trim()) }
